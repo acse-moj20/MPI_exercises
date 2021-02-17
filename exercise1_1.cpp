@@ -8,8 +8,8 @@ using namespace std;
 int id, p;
 
 // Lecture 1 Exercise 1 : Ring Communication
-// ================================
-int main(int argc, char* argv[])
+// ==========================================
+int exercise1_1(int argc, char* argv[])
 {
 
 	MPI_Init(&argc, &argv);

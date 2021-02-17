@@ -8,12 +8,9 @@ using namespace std;
 int id, p;
 
 // Lecture 1 Exercise 2: Ring Communication w/Probe 
-// ======================================
-int exercise2(int argc, char* argv[])
+// ================================================
+int exercise1_2(int argc, char* argv[])
 {
-
-
-
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
@@ -39,10 +36,10 @@ int exercise2(int argc, char* argv[])
 		cout << endl;
 
 		MPI_Status status;
-		MPI_Probe(p - 1, tag_num, MPI_COMM_WORLD, &status);
+		MPI_Probe(p - 1, tag_num, MPI_COMM_WORLD, &status);		// Probe 
 		MPI_Get_count(&status, MPI_INT, &num_recv);
 		MPI_Recv(data, num_recv, MPI_INT, p - 1, tag_num, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		cout << "Reciving all these info back: ";
+		cout << "Receiving all these info back: ";
 		for (int j = 0; j != num_recv; j++) {
 			cout << data[j] << " ";
 		}
