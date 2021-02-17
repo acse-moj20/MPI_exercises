@@ -9,7 +9,7 @@ int id, p;
 
 // Lecture 1 Exercise 1 : Ring Communication
 // ================================
-int exercise1(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 
 	MPI_Init(&argc, &argv);
@@ -30,9 +30,9 @@ int exercise1(int argc, char* argv[])
 		MPI_Recv(data, p, MPI_INT, p - 1, tag_num, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		cout << "Receiving all these back: ";
 		for (int j = 0; j != p; j++) {
-			cout << data[j] << "\t";
+			cout << data[j] << "  ";
 		}
-		cout << " to processor: " << id << ".";
+		cout << " to processor: " << id << " " << endl;
 		tag_num++;
 
 		delete[] data;
@@ -49,7 +49,7 @@ int exercise1(int argc, char* argv[])
 		data[id] = rand();
 
 		MPI_Send(data, id + 1, MPI_INT, id_send, tag_num, MPI_COMM_WORLD);
-		cout << "Sending " << data[id] << " to processor: " << id_send << endl;
+		// cout << "Sending " << data[id] << " to processor: " << id_send << endl;
 		tag_num++;
 
 		delete[] data;
