@@ -20,6 +20,11 @@
 using namespace std;
 int id, p;
 
+/*
+ The strategy here is to employ a Probe and a GetCount to get the status and count of data being sent. 
+ Make sure to delete data after every send.
+
+*/
 int main(int argc, char* argv[])
 {
 	MPI_Init(&argc, &argv);
