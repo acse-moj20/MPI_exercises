@@ -29,14 +29,15 @@ int main(int argc, char* argv[])
 
 	
 	int tag_num = 1;
-	int* data;
+	int* data;	// initialize placeholder for data to send
 
 	if (id == 0) {
 		// data to send 
 
 		int recv_count;
-		int send_count = 1 + rand() % 3;
-		data = new int[send_count];
+		int send_count = 1 + rand() % 3; // send between 2 to 3 integers
+		data = new int[send_count];	// 
+
 		cout << "Processor " << id << " added: ";
 		for (int j = 0; j < send_count; j++) { 
 			data[j] = rand(); 
@@ -44,11 +45,11 @@ int main(int argc, char* argv[])
 		}
 		cout << endl;
 		MPI_Send(data, send_count, MPI_INT, id + 1, tag_num, MPI_COMM_WORLD);
-		delete[] data;
+		delete[] data;	// clear data after sending
 
 		MPI_Status status;
-		MPI_Probe(p - 1, tag_num, MPI_COMM_WORLD, &status);		// Probe 
-		MPI_Get_count(&status, MPI_INT, &recv_count);
+		MPI_Probe(p - 1, tag_num, MPI_COMM_WORLD, &status);		// Probe to get status
+		MPI_Get_count(&status, MPI_INT, &recv_count);			// Get count then create data of same size
 		data = new int[recv_count];
 		MPI_Recv(data, recv_count, MPI_INT, p - 1, tag_num, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		
