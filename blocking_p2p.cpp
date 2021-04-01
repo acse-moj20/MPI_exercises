@@ -40,8 +40,6 @@ int main(int argc, char* argv[])
 
 	int tag_num = 1;
 
-#if 1
-
 	// [Implementation (a)]: each process takes a turn at sending to other processors. 
 	// This is the slowest but easiest way of P2P blocking communication.
 
@@ -66,54 +64,6 @@ int main(int argc, char* argv[])
 		}
 		tag_num++;
 	}
-#else
-	// [Implementation b & c]: Each process sending and receiving simultaneously. 
-	// Invovles ordering of sends/receives or using probes to handle communication.
-
-	int mid = p / 2;
-	if (id < mid)
-	{
-	// Send data to another processor first
-		for (int s_id = p-1; s_id >=mid; s_id--)
-		{
-			double send_data = double(s_id);
-			MPI_Send(&send_data, 1, MPI_DOUBLE, s_id, tag_num, MPI_COMM_WORLD);
-			cout << "Processor: " << id << " sent to Processor: " << s_id << endl;
-			double recv_data;
-			MPI_Recv(&recv_data, 1, MPI_DOUBLE, s_id, tag_num, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			//cout << "Processor: " << id << " received from Processor: " << s_id << endl;
-			cout.flush();
-		
-		}
-		
-	}
-	else {
-		// Receive data from  another processor first
-		for (int s_id = 0; s_id < mid ; s_id++)
-		{
-			if (s_id != id) {
-
-				int num_recv;				// number of data to be recievied.
-				MPI_Status status;
-				auto c = MPI_Probe(s_id, tag_num, MPI_COMM_WORLD, &status);
-				auto d = MPI_Get_count(&status, MPI_DOUBLE, &num_recv);
-				
-
-				double recv_data;
-				MPI_Recv(&recv_data, 1, MPI_DOUBLE, s_id, tag_num, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-				//cout << "Processor: " << id << " received from Processor: " << s_id << endl;
-				double send_data = double(s_id) / double(p);
-				MPI_Send(&send_data, 1, MPI_DOUBLE, s_id, tag_num, MPI_COMM_WORLD);
-				cout << "Processor: " << id << " sent to Processor: " << s_id << endl;
-				cout.flush();
-			}
-		}
-		
-	}
-
-	tag_num++;
-
-#endif
 	MPI_Finalize();
 	return 0;
 }
