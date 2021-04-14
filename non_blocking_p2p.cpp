@@ -119,7 +119,6 @@ int main(int argc, char* argv[]) {
 	cout << endl;
 	cout.flush();
 
-	
 	for (int i = 0; i < p; i++) {
 		if (recv_status[i]) {
 			num_recv_procs++;
