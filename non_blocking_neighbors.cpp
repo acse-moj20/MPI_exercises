@@ -23,24 +23,15 @@ You might encounter it if you are doing peer to peer communication for a domain 
 
 
 using namespace std;
-vector<int> send_procs;
-vector<int> recv_procs;
+vector<int> send_recv_procs;
+int num_send_recv = 0;
 int id, p, m, n;
-
+int index_i; // column index of process
+int index_j; // row index of process
 
 void setup_Comms(void) {
-	int tag_num = 1;
-	MPI_Request* request = new MPI_Request[(p - 1) * 2];
-
-	bool* send_status = new bool[p];
-	bool* recv_status = new bool[p];
-	for (int i = 0; i != p; i++) { send_status[i] = false; }
-
-	// Calculating i, j index of id
-	int index_i = id % m; // column index of process
-	int index_j = id / m; // row index of process
 	
-	
+
 	for (int send_id = 0; send_id < p; send_id++) {
 		int i = send_id % m;
 		int j = send_id / m;
@@ -49,40 +40,48 @@ void setup_Comms(void) {
 
 		if (((i == index_i + 1 || i == index_i - 1) && (j == index_j || j == index_j - 1 || j == index_j + 1)) ||
 			(i == index_i && (j == index_j - 1 || j == index_j + 1))) {
-			
-			send_procs.push_back(send_id);
-			recv_procs.push_back(send_id);
-			send_status[send_id] = true;
-			recv_status[send_id] = true;
+
+			send_recv_procs.push_back(send_id);
+			num_send_recv++;
 		}
 
-	} 
+	}
+}
 
+void do_Comms(void){
 	int cnt = 0;
-	// we set up all communications then do some potential calculations while waiting. All communications are checked afterwards for completion. 
-	for (int i = 0; i < p; i++) {
-		if (i != id) {
-			MPI_Irecv(&recv_status[i], 1, MPI_C_BOOL, i, tag_num, MPI_COMM_WORLD, &request[cnt]);
-			cnt++;
-			MPI_Isend(&send_status[i], 1, MPI_C_BOOL, i, tag_num, MPI_COMM_WORLD, &request[cnt]);
-			cnt++;
-		}
-		else {
-			recv_status[i] = false;
-		}
+	int tag_num = 1;
+
+	int* send_data = new int[num_send_recv * 3];
+	int* recv_data = new int[num_send_recv * 3];
+	MPI_Request* request = new MPI_Request[num_send_recv * 2];
+
+
+	for (int i = 0; i < num_send_recv; i++) {
+		send_data[cnt * 3] = id;
+		send_data[cnt * 3 + 1] = index_j;
+		send_data[cnt * 3 + 2] = index_i;
+		
+		MPI_Irecv(&recv_data[i*3], 3, MPI_INT, send_recv_procs[i], tag_num, MPI_COMM_WORLD, &request[cnt * 2]);
+		MPI_Isend(&send_data[i*3], 3, MPI_INT, send_recv_procs[i], tag_num, MPI_COMM_WORLD, &request[cnt * 2 + 1]);
+		cnt++;
 
 
 	}
 
-	MPI_Waitall(cnt, request, MPI_STATUSES_IGNORE);
+	MPI_Waitall(cnt*2, request, MPI_STATUSES_IGNORE);
 
 
-	cout << "Processor " << id << " sending to: ";
-	for (int i = 0; i < p; i++) {
-		if (send_status[i]) { cout << i << " "; }
+	cout << id << " receiving from ";
+	for (int i = 0; i < cnt; i++) {
+		cout << recv_data[i * 3] << " ( " << recv_data[i * 3 + 1] << ", " << recv_data[i * 3 + 2] << ")\t";
 	}
 	cout << endl;
 	cout.flush();
+
+	delete[] send_data;
+	delete[] recv_data;
+	delete[] request;
 }
 
 int main(int argc, char* argv[]) {
@@ -96,9 +95,12 @@ int main(int argc, char* argv[]) {
 	m = p / n;
 	if (m * n != p) { n -= 1; m = p / n; }
 
+	index_i = id % m; // column index of process
+	index_j = id / m; // row index of process
+
 	//cerr << m << " " << n << endl;
 	setup_Comms();
-
+	do_Comms();
 
 	MPI_Finalize();
 	return 0;
