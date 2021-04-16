@@ -4,16 +4,32 @@
 #include <cstdlib>
 #include <vector>
 
+/*
+  Lecture 4 Exercise 1 : Creating MPI Datatype for a Lagrangian Particle
+  =======================================================================
+
+ When carrying out Lagrangian simulations it is useful to have a class that stores the position of a point/particle 
+ (as well as all its other properties). 
+ 
+ Create a class to store a 2D position and velocity. 
+ Choose a maximum vertical and horizontal extent for your domain and then create 10 000 
+ randomly located particles within these extents on processor zero. Divide the domain up into vertical stripes 
+ of equal width so that there can be a domain assigned to each of the processes.
+
+ Create an MPI type that can send all the information in an object of the class’ type together. 
+ Send the particles individually from the root to the appropriate processor according to its horizontal position. 
+ This can be done using either blocking or non-blocking sends and receives. You can send an empty communication 
+ to indicate that all the particles have been sent.
+
+*/
 int id, p;
 
-// Lecture 4 Exercise 1 : Creating MPI Datatype for a Lagrangian Particle
-// =======================================================================
-
+// class of Lagragian point/particle. Stores position and velocity of particle.
 class Particle
 {
 public:
-	double position[2];
-	double v[2];
+	double position[2]; // x and y position of particle.
+	double v[2];        // x and y velocity of particle.
 
 	static MPI_Datatype MPI_Type;
 	static void create_type(void);
@@ -39,7 +55,7 @@ void Particle::create_type()
 
 	typelist[1] = MPI_DOUBLE;
 	block_lengths[1] = 2;
-	MPI_Get_address(&temp.position, &addresses[1]);  // gets adress of particle's position and stores in address list
+	MPI_Get_address(&temp.v, &addresses[1]);  // gets adress of particle's position and stores in address list
  
 	MPI_Get_address(&temp, &add_start);
 	for (int i = 0; i < 2; i++) { displacements[i] = addresses[i] - add_start; }
@@ -116,7 +132,7 @@ void receive_particles(void) {
 	
 }
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -131,8 +147,10 @@ int main (int argc, char *argv[]) {
 	else {
 		receive_particles();
 	}
-	std::cout << id << " : is responsible for " << particle_list.size() << " particles" << std::endl;
+	std::cout <<"Process "<< id << " : is responsible for " << particle_list.size() << " particles" << std::endl;
 
 	MPI_Type_free(&Particle::MPI_Type);
 	MPI_Finalize();
+
+	return 0;
 }

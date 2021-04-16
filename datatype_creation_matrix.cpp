@@ -1,16 +1,28 @@
+/*
+ Lecture 4 Exercise 2 : Creating MPI Datatype for boundaries of a 2D domain
+ ==========================================================================
+
+Create the same size 2D matrix on each process.On each process also create 4 MPI_Datatypes
+one each for the top, bottom, leftand right hand boundaries of the 2D matrix.
+
+Put data into the matrix on process zero and transfer the edges of this data to all the other processes.
+*/
+
+
 #include <mpi.h>
 #include <iostream>
 #include <time.h>
 #include <cstdlib>
 #include <vector>
 
-
 using namespace std;
+int id, p;
 double** array_data;
 const int i_max = 200, j_max = 200;
-int id, p;
+
 
 MPI_Datatype top_type, bottom_type, left_type, right_type;
+
 
 void create_array(int m, int n) {
 
@@ -23,7 +35,7 @@ void create_array(int m, int n) {
 void free_array(int m, int n)
 {
 	for (int i = 0; i < m; i++) {
-		delete[] array_data;
+		delete[] array_data[i];
 	}
 	delete[] array_data;
 }
@@ -42,7 +54,7 @@ void create_left_type(int m, int n) {
 		addresses.push_back(temp_add);
 	}
 
-	MPI_Get_address(&temp_add, &add_start);
+	MPI_Get_address(array_data, &add_start);
 	for (int i = 0; i < m; i++) { addresses[i] = addresses[i] - add_start; }
 
 	MPI_Type_create_struct(m, block_lengths.data(), addresses.data(), typelist.data(), &left_type);
@@ -63,7 +75,7 @@ void create_right_type(int m, int n) {
 		addresses.push_back(temp_add);
 	}
 
-	MPI_Get_address(&temp_add, &add_start);
+	MPI_Get_address(array_data, &add_start);
 	for (int i = 0; i < m; i++) { addresses[i] = addresses[i] - add_start; }
 
 	MPI_Type_create_struct(m, block_lengths.data(), addresses.data(), typelist.data(), &right_type);
@@ -79,10 +91,8 @@ void create_top_type(int m, int n) {
 
 	block_length = n;
 	typeval = MPI_DOUBLE;
-	address = 0;
-	
 
-	MPI_Get_address(&array_data[m-1][0], &address);
+	MPI_Get_address(&array_data[0][0], &address);
 	MPI_Get_address(array_data, &add_start);
 	
 	address = address - add_start;
@@ -100,7 +110,6 @@ void create_bottom_type(int m, int n) {
 
 	block_length = n;
 	typeval = MPI_DOUBLE;
-	address = 0;
 
 
 	MPI_Get_address(&array_data[m - 1][0], &address);
@@ -146,4 +155,6 @@ int main(int argc, char* argv[]) {
 	MPI_Finalize();
 	
 	free_array(i_max, j_max);
+
+	return 0;
 }
